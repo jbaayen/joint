@@ -499,16 +499,31 @@ joint.dia.LinkView = joint.dia.CellView.extend({
         var sourcePoint, targetPoint, sourceMarkerPoint, targetMarkerPoint;
 
         var firstVertex = _.first(vertices);
-
-        sourcePoint = this.getConnectionPoint(
-            'source', this.model.get('source'), firstVertex || this.model.get('target')
-        ).round();
-
         var lastVertex = _.last(vertices);
 
-        targetPoint = this.getConnectionPoint(
-            'target', this.model.get('target'), lastVertex || sourcePoint
-        ).round();
+        targetPoint = this.model.get('target');
+
+        var maxConnectionPointIterations = this.options.maxConnectionPointIterations || 1;
+        var connectionPointIterationTol  = this.options.connectionPointIterationTol  || 0.01;
+        for (var i = 0; i < maxConnectionPointIterations; i++) {
+            var newSourcePoint = this.getConnectionPoint(
+                'source', this.model.get('source'), firstVertex || targetPoint
+            ).round();
+
+            var newTargetPoint = this.getConnectionPoint(
+                'target', this.model.get('target'), lastVertex || newSourcePoint
+            ).round();
+
+            if (i > 0) {
+                if (newSourcePoint.distance(sourcePoint) < connectionPointIterationTol &&
+                    newTargetPoint.distance(targetPoint) < connectionPointIterationTol) {
+                    break;
+                }
+            }
+
+            sourcePoint = newSourcePoint;
+            targetPoint = newTargetPoint;
+        }
 
         // Move the source point by the width of the marker taking into account
         // its scale around x-axis. Note that scale is the only transform that

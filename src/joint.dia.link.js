@@ -1388,12 +1388,18 @@ joint.dia.LinkView = joint.dia.CellView.extend({
 
                     // skip connecting to the element in case '.': { magnet: false } attribute present
                     if (view.el.getAttribute('magnet') !== 'false') {
+                        var bbox = view.model.getBBox();
+                        var center = bbox.center();
 
                         // find distance from the center of the model to pointer coordinates
-                        distance = view.model.getBBox().center().distance(pointer);
+                        var distanceX = Math.abs(center.x - pointer.x);
+                        var distanceY = Math.abs(center.y - pointer.y);
+                        distance = Math.sqrt(Math.pow(distanceX, 2) + Math.pow(distanceY, 2));
+
+                        var inBox = distanceX < bbox.width / 2 && distanceY < bbox.height / 2;
 
                         // the connection is looked up in a circle area by `distance < r`
-                        if (distance < r && distance < minDistance) {
+                        if ((inBox || distance < r) && distance < minDistance) {
 
                             if (this.paper.options.validateConnection.apply(
                                 this.paper, this._validateConnectionArgs(view, null)
